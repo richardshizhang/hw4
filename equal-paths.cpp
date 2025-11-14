@@ -16,28 +16,45 @@ bool equalPaths(Node * root)
     if (root==NULL){
         return true;
     }
-    if (root->left == NULL){
+    if (root->left == NULL){ // edge case 1 child
         if (pathLength(root->right)==1){
             return true;
         }
     }
-    if (root->right == NULL){
+    if (root->right == NULL){ // edge case 1 child
         if (pathLength(root->left)==1){
             return true;
         }
     }
-    return pathLength(root->left)==pathLength(root->right);
+    int leftLength = pathLength(root->left);
+    int rightLength = pathLength(root->right);
+    if (leftLength == -1 || rightLength == -1){
+        return false; //there is a leaf path somewhere that does not reach the same length
+    }
+    return leftLength==rightLength;
 }
 
 int pathLength(Node* root){
     if (root==NULL){
         return 0;
     }
-    if (root->left == 0 && root->right == 0){ // leaf node
+    if (root->left == NULL && root->right == NULL){ // leaf node
         return 1;
     }
     int leftLength = pathLength(root->left);
     int rightLength = pathLength(root->right);
+    if (leftLength==-1 || rightLength==-1){
+        //this is my error case, so if error is received,
+        //propagate the error
+        return -1; 
+    }
+    if (leftLength>rightLength || rightLength<leftLength){
+        if (!leftLength==0 && !rightLength==0){
+            // say you have lengths 2 and 1 at this node: 
+            // clearly all lengths to leaves are unequal
+            return -1; // unbalanced lengths are ok if one side is a leaf
+        }
+    }
     if (leftLength>rightLength){
         return 1+leftLength;
     }
