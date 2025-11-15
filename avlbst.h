@@ -208,7 +208,241 @@ template<class Key, class Value>
 void AVLTree<Key, Value>:: remove(const Key& key)
 {
     // TODO
+    Node<Key,Value>* raw = BinarySearchTree<Key, Value>::internalFind(key);
+    if (raw == NULL){
+        return;
+    }
+    AVLNode<Key, Value>* n = static_cast<AVLNode<Key, Value>*>(raw);
+    
+    if (n->getLeft()!=NULL && n->getRight() != NULL){
+        Node<Key,Value>* rawpred = BinarySearchTree<Key, Value>::predecessor(n);
+        AVLNode<Key, Value>* pred = static_cast<AVLNode<Key, Value>*>(rawpred);
+        BinarySearchTree<Key, Value>::nodeSwap(n,pred);
+    }
+    AVLNode<Key,Value>* p = n->getParent();
+    AVLNode<Key,Value>* child = NULL;
+    if (n->getLeft()!= NULL){
+        child = n->getLeft();
+    }
+    else{
+        child = n->getRight();
+    }
+
+    int8_t diff = 0;
+    if (p == NULL){
+        this->root_ = child;
+        if (child != NULL){
+            child->setParent(NULL);
+        }
+        delete n;
+        return;
+    }
+    if (n == p->getLeft()){
+        diff = 1;
+        p->setLeft(child);
+    }
+    else if (n == p->getRight()){
+        diff = -1;
+        p->setRight(child);
+    }
+    if (child != NULL){
+        child->setParent(p);
+    }
+    
+    delete n;
+    removeFix(p,diff);
 }
+
+template<class Key, class Value>
+void AVLTree<Key, Value>::removeFix(AVLNode<Key,Value>* n, int8_t diff){
+    if (n==NULL){
+        return;
+    }
+    AVLNode<Key,Value>* p = n->getParent();
+    if (p == NULL){
+        return;
+    }
+    int8_t ndiff = -1;
+    if (n==p->getLeft()){
+        ndiff = 1;
+    }
+    if (diff == -1){
+        //case 2 and 3
+        if (n->getBalance()+diff == -1){
+            n->setBalance(-1);
+            return;
+        }
+        if (n->getBalance()+diff == 0){
+            n->setBalance(0);
+            removeFix(p,ndiff);
+            return;
+        }
+        //case 1 and mirror
+        if (n->getBalance()+diff == -2){
+            AVLNode<Key,Value>* c = n->getLeft(); //taller child
+            if (c->getBalance()==-1){// 1a, zigzig
+                rotateRight(n);
+                n->setBalance(0);
+                c->setBalance(0);
+                removeFix(p,ndiff);
+                return;
+            }
+            else if (c->getBalance()==0){// 1b, zigzig
+                rotateRight(n);
+                n->setBalance(-1);
+                c->setBalance(1);
+                return;
+            }
+            else{
+                AVLNode<Key,Value>* g = c->getRight();
+                rotateLeft(c);
+                rotateRight(n);
+                if (g->getBalance()==1){
+                    n->setBalance(0);
+                    c->setBalance(-1);
+                    g->setBalance(0);
+                }
+                else if (g->getBalance()==0){
+                    n->setBalance(0);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+                else {
+                    n->setBalance(1);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+
+            }
+        }
+        else if (n->getBalance()+diff == 2){
+            AVLNode<Key,Value>* c = n->getRight(); //taller child
+            if (c->getBalance()==1){// 1a, zigzig
+                rotateLeft(n);
+                n->setBalance(0);
+                c->setBalance(0);
+                removeFix(p,ndiff);
+                return;
+            }
+            else if (c->getBalance()==0){// 1b, zigzig
+                rotateLeft(n);
+                n->setBalance(1);
+                c->setBalance(-1);
+                return;
+            }
+            else{
+                AVLNode<Key,Value>* g = c->getLeft();
+                rotateRight(c);
+                rotateLeft(n);
+                if (g->getBalance()==-1){
+                    n->setBalance(0);
+                    c->setBalance(1);
+                    g->setBalance(0);
+                }
+                else if (g->getBalance()==0){
+                    n->setBalance(0);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+                else {
+                    n->setBalance(-1);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+
+            }
+        }
+
+    }
+    else{//mirror; if diff == 1
+        //case 2 and 3
+        if (n->getBalance()+diff == 1){
+            n->setBalance(1);
+            return;
+        }
+        if (n->getBalance()+diff == 0){
+            n->setBalance(0);
+            removeFix(p,ndiff);
+            return;
+        }
+        //case 1 mirrored
+        if (n->getBalance()+diff == 2){
+            AVLNode<Key,Value>* c = n->getRight(); //taller child
+            if (c->getBalance()==1){// 1a, zigzig
+                rotateLeft(n);
+                n->setBalance(0);
+                c->setBalance(0);
+                removeFix(p,ndiff);
+                return;
+            }
+            else if (c->getBalance()==0){// 1b, zigzig
+                rotateLeft(n);
+                n->setBalance(1);
+                c->setBalance(-1);
+                return;
+            }
+            else{
+                AVLNode<Key,Value>* g = c->getLeft();
+                rotateRight(c);
+                rotateLeft(n);
+                if (g->getBalance()==-1){
+                    n->setBalance(0);
+                    c->setBalance(1);
+                    g->setBalance(0);
+                }
+                else if (g->getBalance()==0){
+                    n->setBalance(0);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+                else {
+                    n->setBalance(-1);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+
+            }
+        }
+        else if (n->getBalance()+diff == -2){
+            AVLNode<Key,Value>* c = n->getLeft(); //taller child
+            if (c->getBalance()==-1){// 1a, zigzig
+                rotateRight(n);
+                n->setBalance(0);
+                c->setBalance(0);
+                removeFix(p,ndiff);
+                return;
+            }
+            else if (c->getBalance()==0){// 1b, zigzig
+                rotateRight(n);
+                n->setBalance(-1);
+                c->setBalance(1);
+                return;
+            }
+            else{
+                AVLNode<Key,Value>* g = c->getRight();
+                rotateLeft(c);
+                rotateRight(n);
+                if (g->getBalance()==1){
+                    n->setBalance(0);
+                    c->setBalance(-1);
+                    g->setBalance(0);
+                }
+                else if (g->getBalance()==0){
+                    n->setBalance(0);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+                else {
+                    n->setBalance(1);
+                    c->setBalance(0);
+                    g->setBalance(0);
+                }
+
+            }
+        }
+    }
+}
+
 template<class Key, class Value>
 void AVLTree<Key, Value>::rotateRight(AVLNode<Key,Value>* center){
     AVLNode<Key,Value>* lc = center->getLeft();
@@ -273,6 +507,7 @@ void AVLTree<Key, Value>::insertFix(AVLNode<Key,Value>* p, AVLNode<Key,Value>* n
         }
         if (g->getBalance()==-1){//case 2
             insertFix(g,p);
+            return;
         }
         if (g->getBalance()==-2){//case 3
             if (p->getBalance()==-1){
@@ -310,6 +545,7 @@ void AVLTree<Key, Value>::insertFix(AVLNode<Key,Value>* p, AVLNode<Key,Value>* n
         }
         if (g->getBalance()==1){//case 2
             insertFix(g,p);
+            return;
         }
         if (g->getBalance()==2){//case 3
             if (p->getBalance()==1){
@@ -340,11 +576,6 @@ void AVLTree<Key, Value>::insertFix(AVLNode<Key,Value>* p, AVLNode<Key,Value>* n
             return;
         }
     }
-}
-
-template<class Key, class Value>
-void AVLTree<Key, Value>::removeFix(AVLNode<Key,Value>* n, int8_t diff){
-
 }
 
 template<class Key, class Value>
