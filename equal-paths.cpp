@@ -48,7 +48,7 @@ int pathLength(Node* root){
         //propagate the error
         return -1; 
     }
-    if (leftLength>rightLength || rightLength<leftLength){
+    if (leftLength>rightLength || rightLength>leftLength){
         if (!leftLength==0 && !rightLength==0){
             // say you have lengths 2 and 1 at this node: 
             // clearly all lengths to leaves are unequal
